@@ -17,19 +17,25 @@ public class TravelBookingController {
 
     private final WorkflowClient workflowClient;
     private final BookingRepository bookingRepository;
+    private final UserBookingRepository userBookingRepository;
 
     @Autowired
-    public TravelBookingController(WorkflowClient workflowClient, BookingRepository bookingRepository) {
+    public TravelBookingController(WorkflowClient workflowClient, BookingRepository bookingRepository, UserBookingRepository userBookingRepository) {
         this.workflowClient = workflowClient;
         this.bookingRepository = bookingRepository;
+        this.userBookingRepository = userBookingRepository;
     }
 
     @PostMapping("/initiate")
     public ResponseEntity<String> initiateBooking(@Valid @RequestBody BookingRequest bookingRequest) {
+        // Save user-specific data to userBookings collection
+        UserBooking userBooking = new UserBooking(bookingRequest.getUserId(), bookingRequest.getDestination());
+        userBookingRepository.save(userBooking);
+
         // Generate a unique booking ID
         String bookingId = UUID.randomUUID().toString().substring(0, 18);
 
-        // Save booking data to MongoDB with "Initiated" status
+        // Save booking data to bookings collection with "Initiated" status
         Booking booking = new Booking(bookingId, "Initiated");
         bookingRepository.save(booking);
 
